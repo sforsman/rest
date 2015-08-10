@@ -35,7 +35,7 @@ abstract class AbstractJsonService implements ServiceInterface
         $invokeArgs[] = $args['id'];
         break;
     }
-    $response = call_user_method_array($method, $this, $invokeArgs);
+    $response = call_user_func_array([$this, $method], $invokeArgs);
     if(!is_array($response)) {
       throw new Exception('Invalid response data');
     }

@@ -114,4 +114,38 @@ class Server
     $response = $dispatcher->dispatch($method, $path);
     $response->send();
   }
+
+  public function registerErrorHandlers()
+  {
+    set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+      $this->respondError("PHP error {$errno}: {$errstr} @ {$errfile}:{$errline}");
+     }, E_ALL);
+
+    // Ensure fatal errors get logged and a clean error is shown to the user
+    register_shutdown_function(function() {
+      $error = error_get_last();
+      if($error !== null) {
+        list($errno,$errstr,$errfile,$errline) = array_values($error);
+        $this->respondError("Fatal error {$errno}: {$errstr} @ {$errfile}:{$errline}");
+      }
+    });
+
+    // These only prevent the PHP default stuff flying into the browser (or to Apache's/PHP's error logs)
+    ini_set('display_errors', '0');
+    ini_set('log_errors', '0');
+    error_reporting(0);
+  }
+
+  protected function respondError($errorStr)
+  {
+    $this->emitter->emit(Event::named('error'), $errorStr);
+
+    http_response_code(500);
+    Header('Content-type: application/json');
+    echo json_encode([
+      'status_code'=>500,
+      'message'=>'Internal server error',
+    ]);
+    exit();
+  }
 }

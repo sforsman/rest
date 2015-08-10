@@ -21,10 +21,14 @@ $callback = function (AbstractEvent $event, $param = null) use ($log) {
 
 $emitter = new Emitter();
 $emitter->addListener('dispatch', CallbackListener::fromCallable($callback));
-$emitter->addListener('exception', CallbackListener::fromCallable(function($event,$param) use ($log) {
+$emitter->addListener('exception', CallbackListener::fromCallable(function($event, $param) use ($log) {
   $log->addError($param['exception']->getMessage());
+}));
+$emitter->addListener('error', CallbackListener::fromCallable(function($event, $errorStr) use ($log) {
+  $log->addWarning($errorStr);
 }));
 
 $api = new Server($emitter);
+$api->registerErrorHandlers();
 $api->register('page', PageService::class);
 $api->run();
