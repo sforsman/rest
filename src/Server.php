@@ -2,11 +2,17 @@
 
 namespace sforsman\Rest;
 
+use \Exception;
 use League\Route\RouteCollection as Router;
 use League\Route\Strategy\RestfulStrategy;
 use League\Container\Container;
 use League\Event\Emitter;
+use League\Event\Event;
 use Symfony\Component\HttpFoundation\Request;
+use League\Route\Http\Exception\BadRequestException;
+use League\Route\Http\Exception\ForbiddenException;
+use League\Route\Http\Exception\NotFoundException;
+use League\Route\Http\Exception as HttpException;
 
 class Server
 {
@@ -23,6 +29,7 @@ class Server
 
     $this->container   = new Container();
     $this->router      = new Router($this->container);
+    $this->router->setStrategy(new RestfulStrategy());
     $this->emitter     = $emitter;
     $this->services = [];
   }
@@ -32,13 +39,13 @@ class Server
     if(!isset($this->services[$version])) {
       $this->services[$version] = [];
     } elseif(isset($this->services[$version][$entity])) {
-      throw new Exception('A service for the entity "' . $entity . ' has already been registered (' . $version . ')"');
+      throw new Exception('A service for the entity "' . $entity . '" has already been registered (' . $version . ')');
     } 
-    if(preg_match('|^[0-9A-Za-z_-]+$|', $entity)) {
-      throw new Exception('The entity name ' . $entity . ' is invalid');
+    if(!preg_match('|^[0-9A-Za-z_-]+$|', $entity)) {
+      throw new Exception('The entity name "' . $entity . '" is invalid');
     }
-    if(preg_match('|^[0-9A-Za-z_-]+$|', $version)) {
-      throw new Exception('The version name ' . $version . ' is invalid');
+    if(!preg_match('|^[0-9A-Za-z_-]+$|', $version)) {
+      throw new Exception('The version name "' . $version . '" is invalid');
     }
 
     $this->services[$version][$entity] = $class;
@@ -53,7 +60,7 @@ class Server
           if($service instanceof ServiceInterface) {
             return $service->invoke($request_method, $args);
           } else {
-            throw new Exception('The service ' . $class . ' does not implement ServerInterface');
+            throw new Exception('The service "' . $class . '" does not implement ServerInterface');
           }
         } catch(RestException $e) {
           // These are 'soft' exceptions, for which we want to show the user of the API
@@ -61,21 +68,22 @@ class Server
           // HTTP code
 
           // By listening for these events, the API can implement logging, for an example
-          $emitter->emit(Event::named('Exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args]);
+          $emitter->emit(Event::named('exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args]);
 
-          switch($e->getCode()
+          switch($e->getCode())
           {
             case 400: throw new BadRequestException($e->getMessage());
             case 403: throw new ForbiddenException($e->getMessage());
             case 404: throw new NotFoundException($e->getMessage());
-            default:  throw new HttpException($e->getMessage(), 500);
+            case 405: throw new HttpException(405, $e->getMessage());
+            default:  throw new HttpException(500, $e->getMessage());
           }
         } catch(Exception $e) {
           // By listening for these events, the API can implement logging, for an example
-          $emitter->emit(Event::named('Exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args]);
+          $emitter->emit(Event::named('exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args]);
 
           // For other Exceptions we just show a server error
-          throw new HttpException('Internal server error', 500);
+          throw new HttpException(500, 'Internal server error');
         }
       };
 
@@ -84,7 +92,7 @@ class Server
       } elseif($request_method === 'GET') {
         $this->router->addRoute($request_method, $path . '/{id}', $closure);
         $this->router->addRoute($request_method, $path, $closure);
-      } else
+      } else {
         $this->router->addRoute($request_method, $path . '/{id}', $closure);
       }
     }
@@ -97,9 +105,7 @@ class Server
     }
     $this->request = $request;
 
-    $router->setStrategy(new RestfulStrategy());
-
-    $dispatcher = $router->getDispatcher();
+    $dispatcher = $this->router->getDispatcher();
     $method     = $request->getMethod();
     $path       = $request->getPathInfo();
 

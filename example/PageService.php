@@ -6,6 +6,6 @@ class PageService extends AbstractJsonService
 {
   public function all()
   {
-    echo 'Hi, world!';
+    return ['message'=> 'Hi, world!'];
   }
 }

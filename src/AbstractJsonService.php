@@ -2,12 +2,9 @@
 
 namespace sforsman\Rest;
 
-use League\Route\Http\Exception\BadRequestException;
-use League\Route\Http\Exception\ForbiddenException;
-use League\Route\Http\Exception\NotFoundException;
-use League\Route\Http\Exception\HttpException;
+use \Exception;
 
-abstract class AbstractJsonService implements ServerInterface
+abstract class AbstractJsonService implements ServiceInterface
 {
   public function invoke($request_method, array $args)
   {
@@ -47,32 +44,32 @@ abstract class AbstractJsonService implements ServerInterface
 
   public function get($id)
   {
-    throw new Exception('Unknown method');
+    throw new RestException('Not implemented', 405);
   }
 
   public function all()
   {
-    throw new Exception('Unknown method');
+    throw new RestException('Not implemented', 405);
   }
 
   public function post($data)
   {
-    throw new Exception('Unknown method');
+    throw new RestException('Not implemented', 405);
   }
 
   public function put($id, $data)
   {
-    throw new Exception('Unknown method');
+    throw new RestException('Not implemented', 405);
   }
 
   public function patch($id, $data)
   {
-    throw new Exception('Unknown method');
+    throw new RestException('Not implemented', 405);
   }
 
   public function delete($id)
   {
-    throw new Exception('Unknown method');
+    throw new RestException('Not implemented', 405);
   }
 
   public function parseInput($data)

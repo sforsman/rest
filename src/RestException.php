@@ -2,7 +2,7 @@
 
 namespace sforsman\Rest;
 
-class RestException
+class RestException extends \Exception
 {
   public function __construct($message, $code = 400)
   {
