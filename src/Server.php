@@ -21,13 +21,16 @@ class Server
   protected $emitter;
   protected $services;
 
-  public function __construct(Emitter $emitter = null)
+  public function __construct(Emitter $emitter = null, Container $container = null)
   {
     if($emitter === null) {
       $emitter = new Emitter();
     }
+    if($container === null) {
+      $container = new Container();
+    }
 
-    $this->container   = new Container();
+    $this->container   = $container;
     $this->router      = new Router($this->container);
     $this->router->setStrategy(new RestfulStrategy());
     $this->emitter     = $emitter;
@@ -55,7 +58,7 @@ class Server
     foreach(['GET','POST','PUT','PATCH','DELETE'] as $request_method) {
       $closure = function(Request $request, array $args = []) use ($request_method, $class) {
         try {
-          $service = new $class();
+          $service = $this->container->get($class);
           if($service instanceof ServiceInterface) {
             $this->emitter->emit(Event::named('invoke'), ['request'=>$request, 'args'=>$args, 'service'=>$service, 'method'=>$request_method]);
             return $service->invoke($request_method, $args);
