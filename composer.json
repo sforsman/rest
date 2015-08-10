@@ -1,6 +1,23 @@
 {
+    "name": "sforsman/rest",
+    "description": "A RESTful server aimed for fast creation of APIs using conventions.",
+    "keywords": ["api", "rest"],
+    "homepage": "http://github.com/sforsman/sqs-worker",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Sebastian Forsman",
+            "email": "sebastian.forsman@gmail.com",
+            "homepage": "http://github.com/sforsman"
+        }
+    ],
     "require": {
+        "php": ">=5.5.0",
         "league/event": "^2.1",
         "league/route": "^1.1",
+    },
+    "autoload": {
+        "psr-4": {"sforsman\\Rest\\": "src/"}
     }
 }
