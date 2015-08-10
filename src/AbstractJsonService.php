@@ -1,10 +1,15 @@
 <?php
 
-namespace sforsman\Rest\Controllers;
+namespace sforsman\Rest;
 
-abstract class AbstractJsonController
+use League\Route\Http\Exception\BadRequestException;
+use League\Route\Http\Exception\ForbiddenException;
+use League\Route\Http\Exception\NotFoundException;
+use League\Route\Http\Exception\HttpException;
+
+abstract class AbstractJsonService implements ServerInterface
 {
-  public function invoke($request_method, $args)
+  public function invoke($request_method, array $args)
   {
     if($request_method === 'GET' and empty($args['id'])) {
       $method = 'all'; 

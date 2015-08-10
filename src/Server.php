@@ -5,7 +5,6 @@ namespace sforsman\Rest;
 use League\Route\RouteCollection as Router;
 use League\Route\Strategy\RestfulStrategy;
 use League\Container\Container;
-use Psr\Log\LoggerInterface;
 use League\Event\Emitter;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -14,24 +13,26 @@ class Server
   protected $container;
   protected $router;
   protected $emitter;
-  protected $controllers;
+  protected $services;
 
-  public function __construct()
+  public function __construct(Emitter $emitter = null)
   {
+    if($emitter === null) {
+      $emitter = new Emitter();
+    }
+
     $this->container   = new Container();
     $this->router      = new Router($this->container);
-    $this->emitter     = new Emitter();
-    $this->controllers = [];
+    $this->emitter     = $emitter;
+    $this->services = [];
   }
 
   public function register($entity, $class, $version = 'v1')
   {
-    $this->emitter->emit(Event::named('register.begin'), ['entity'=>$entity, 'class'=>$class, 'version'=>$version]);
-
-    if(!isset($this->controllers[$version])) {
-      $this->controllers[$version] = [];
-    } elseif(isset($this->controllers[$version][$entity])) {
-      throw new Exception('A controller for the entity "' . $entity . ' has already been registered (' . $version . ')"');
+    if(!isset($this->services[$version])) {
+      $this->services[$version] = [];
+    } elseif(isset($this->services[$version][$entity])) {
+      throw new Exception('A service for the entity "' . $entity . ' has already been registered (' . $version . ')"');
     } 
     if(preg_match('|^[0-9A-Za-z_-]+$|', $entity)) {
       throw new Exception('The entity name ' . $entity . ' is invalid');
@@ -40,14 +41,42 @@ class Server
       throw new Exception('The version name ' . $version . ' is invalid');
     }
 
-    $this->controllers[$version][$entity] = $class;
+    $this->services[$version][$entity] = $class;
     
     $path = '/' . $version . '/' . $entity;
+    $emitter = $this->emitter;
 
     foreach(['GET','POST','PUT','PATCH','DELETE'] as $request_method) {
-      $closure = function(Request $request, array $args = []) use ($request_method) {
-        $controller = new $class();
-        return $controller->invoke($request_method, $args);
+      $closure = function(Request $request, array $args = []) use ($request_method, $class, $emitter) {
+        try {
+          $service = new $class();
+          if($service instanceof ServiceInterface) {
+            return $service->invoke($request_method, $args);
+          } else {
+            throw new Exception('The service ' . $class . ' does not implement ServerInterface');
+          }
+        } catch(RestException $e) {
+          // These are 'soft' exceptions, for which we want to show the user of the API
+          // the actual message of the exception. Class will be determined based on the
+          // HTTP code
+
+          // By listening for these events, the API can implement logging, for an example
+          $emitter->emit(Event::named('Exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args]);
+
+          switch($e->getCode()
+          {
+            case 400: throw new BadRequestException($e->getMessage());
+            case 403: throw new ForbiddenException($e->getMessage());
+            case 404: throw new NotFoundException($e->getMessage());
+            default:  throw new HttpException($e->getMessage(), 500);
+          }
+        } catch(Exception $e) {
+          // By listening for these events, the API can implement logging, for an example
+          $emitter->emit(Event::named('Exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args]);
+
+          // For other Exceptions we just show a server error
+          throw new HttpException('Internal server error', 500);
+        }
       };
 
       if($request_method === 'POST') {
@@ -58,11 +87,7 @@ class Server
       } else
         $this->router->addRoute($request_method, $path . '/{id}', $closure);
       }
-
-      $this->emitter->emit(Event::named('register.method'), ['entity'=>$entity, 'class'=>$class, 'version'=>$version, 'path'=>$path, 'request_method'=>$request_method, 'method'=>$method]);
     }
-
-    $this->emitter->emit(Event::named('register.end'), ['entity'=>$entity, 'class'=>$class, 'version'=>$version, 'path'=>$path]);
   }
 
   public function run(Request $request = null)
@@ -72,24 +97,15 @@ class Server
     }
     $this->request = $request;
 
-    $this->emitter->emit(Event::named('run.begin'), ['request'=>$request]);
-
     $router->setStrategy(new RestfulStrategy());
 
     $dispatcher = $router->getDispatcher();
     $method     = $request->getMethod();
     $path       = $request->getPathInfo();
 
-    $response = new ArrayObject();
-
-    $this->emitter->emit(Event::named('dispatch.begin'), ['request'=>$request, 'method'=>$method, 'path'=>$path]);
+    $this->emitter->emit(Event::named('dispatch'), ['request'=>$request, 'method'=>$method, 'path'=>$path]);
 
     $response = $dispatcher->dispatch($method, $path);
-
-    $this->emitter->emit(Event::named('dispatch.end'), ['request'=>$request, 'method'=>$method, 'path'=>$path, 'response'=>$response]);
-
     $response->send();
-    
-    $this->emitter->emit(Event::named('run.end'), $request, $response);
   }
 }

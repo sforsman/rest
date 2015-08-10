@@ -2,6 +2,5 @@
     "require": {
         "league/event": "^2.1",
         "league/route": "^1.1",
-        "monolog/monolog": "^1.15"
     }
 }
