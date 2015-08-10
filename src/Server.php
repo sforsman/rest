@@ -51,13 +51,13 @@ class Server
     $this->services[$version][$entity] = $class;
     
     $path = '/' . $version . '/' . $entity;
-    $emitter = $this->emitter;
 
     foreach(['GET','POST','PUT','PATCH','DELETE'] as $request_method) {
-      $closure = function(Request $request, array $args = []) use ($request_method, $class, $emitter) {
+      $closure = function(Request $request, array $args = []) use ($request_method, $class) {
         try {
           $service = new $class();
           if($service instanceof ServiceInterface) {
+            $this->emitter->emit(Event::named('invoke'), ['request'=>$request, 'args'=>$args, 'service'=>$service, 'method'=>$request_method]);
             return $service->invoke($request_method, $args);
           } else {
             throw new Exception('The service "' . $class . '" does not implement ServerInterface');
@@ -68,7 +68,7 @@ class Server
           // HTTP code
 
           // By listening for these events, the API can implement logging, for an example
-          $emitter->emit(Event::named('exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args]);
+          $this->emitter->emit(Event::named('exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args]);
 
           switch($e->getCode())
           {
@@ -80,7 +80,7 @@ class Server
           }
         } catch(Exception $e) {
           // By listening for these events, the API can implement logging, for an example
-          $emitter->emit(Event::named('exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args]);
+          $this->emitter->emit(Event::named('exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args]);
 
           // For other Exceptions we just show a server error
           throw new HttpException(500, 'Internal server error');
@@ -108,8 +108,6 @@ class Server
     $dispatcher = $this->router->getDispatcher();
     $method     = $request->getMethod();
     $path       = $request->getPathInfo();
-
-    $this->emitter->emit(Event::named('dispatch'), ['request'=>$request, 'method'=>$method, 'path'=>$path]);
 
     $response = $dispatcher->dispatch($method, $path);
     $response->send();
