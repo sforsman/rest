@@ -78,7 +78,10 @@ abstract class AbstractJsonService implements ServiceInterface
 
   public function parseInput($data)
   {
-    return json_decode($data, true);
+    $result = json_decode($data, true);
+    if($result === null) {
+      throw new RestException('Input data contained invalid JSON');
+    }
   }
 
   public function ok($message = 'OK')
