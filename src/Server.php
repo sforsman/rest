@@ -5,7 +5,9 @@ namespace sforsman\Rest;
 use \Exception;
 use League\Route\RouteCollection as Router;
 use League\Route\Strategy\RestfulStrategy;
+use League\Container\ContainerInterface;
 use League\Container\Container;
+use League\Event\EmitterInterface;
 use League\Event\Emitter;
 use League\Event\Event;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,7 +23,7 @@ class Server
   protected $emitter;
   protected $services;
 
-  public function __construct(Emitter $emitter = null, Container $container = null)
+  public function __construct(EmitterInterface $emitter = null, ContainerInterface $container = null)
   {
     if($emitter === null) {
       $emitter = new Emitter();
