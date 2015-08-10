@@ -63,7 +63,7 @@ class Server
           $service = $this->container->get($class);
           if($service instanceof ServiceInterface) {
             $this->emitter->emit(Event::named('invoke'), ['request'=>$request, 'args'=>$args, 'service'=>$service, 'method'=>$request_method]);
-            return $service->invoke($request_method, $args);
+            return $service->invoke($request_method, $args, $request);
           } else {
             throw new Exception('The service "' . $class . '" does not implement ServerInterface');
           }
@@ -103,13 +103,9 @@ class Server
     }
   }
 
-  public function run(Request $request = null)
+  public function run()
   {
-    if($request === null) {
-      $request = Request::createFromGlobals();
-    }
-    $this->request = $request;
-
+    $request    = $this->container->get(Request::class);
     $dispatcher = $this->router->getDispatcher();
     $method     = $request->getMethod();
     $path       = $request->getPathInfo();

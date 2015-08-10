@@ -3,10 +3,11 @@
 namespace sforsman\Rest;
 
 use \Exception;
+use Symfony\Component\HttpFoundation\Request;
 
 abstract class AbstractJsonService implements ServiceInterface
 {
-  public function invoke($request_method, array $args)
+  public function invoke($request_method, array $args, Request $request)
   {
     if($request_method === 'GET' and empty($args['id'])) {
       $method = 'all'; 
@@ -17,6 +18,9 @@ abstract class AbstractJsonService implements ServiceInterface
     $invokeArgs = [];
 
     switch($method) {
+      case 'all':
+        $invokeArgs[] = $request->query->all();
+        break;
       case 'get':
         $invokeArgs[] = $args['id'];
         break;
@@ -74,6 +78,11 @@ abstract class AbstractJsonService implements ServiceInterface
 
   public function parseInput($data)
   {
-    return json_decode($data);
+    return json_decode($data, true);
+  }
+
+  public function ok($message = 'OK')
+  {
+    return ['status_code'=>200, 'message'=>$message];
   }
 }
