@@ -15,7 +15,7 @@
     "require": {
         "php": ">=5.5.0",
         "league/event": "^2.1",
-        "league/route": "^1.1",
+        "league/route": "^1.1"
     },
     "autoload": {
         "psr-4": {"sforsman\\Rest\\": "src/"}
