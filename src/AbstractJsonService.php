@@ -82,6 +82,7 @@ abstract class AbstractJsonService implements ServiceInterface
     if($result === null) {
       throw new RestException('Input data contained invalid JSON');
     }
+    return $result;
   }
 
   public function ok($message = 'OK')
