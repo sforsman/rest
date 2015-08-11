@@ -3,6 +3,7 @@
 namespace sforsman\Rest;
 
 use \Exception;
+use \stdClass;
 use League\Route\RouteCollection as Router;
 use League\Route\Strategy\RestfulStrategy;
 use League\Container\ContainerInterface;
