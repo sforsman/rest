@@ -59,6 +59,7 @@ class Server
 
     foreach(['GET','POST','PUT','PATCH','DELETE'] as $request_method) {
       $closure = function(Request $request, array $args = []) use ($request_method, $class) {
+        $service = new stdClass(); // This only exists to identify the situation where container throws an exception
         try {
           $service = $this->container->get($class);
           if($service instanceof ServiceInterface) {
@@ -73,7 +74,7 @@ class Server
           // HTTP code
 
           // By listening for these events, the API can implement logging, for an example
-          $this->emitter->emit(Event::named('exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args]);
+          $this->emitter->emit(Event::named('exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args, 'service'=>$service, 'method'=>$request_method]);
 
           switch($e->getCode())
           {
@@ -85,7 +86,7 @@ class Server
           }
         } catch(Exception $e) {
           // By listening for these events, the API can implement logging, for an example
-          $this->emitter->emit(Event::named('exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args]);
+          $this->emitter->emit(Event::named('exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args, 'service'=>$service, 'method'=>$request_method]);
 
           // For other Exceptions we just show a server error
           throw new HttpException(500, 'Internal server error');
