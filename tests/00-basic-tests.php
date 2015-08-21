@@ -148,34 +148,40 @@ class BasicTest extends \PHPUnit_Framework_TestCase
 
     $request = Request::create('/v1/test', 'GET');
     $response = $api->run($request);
+    $this->assertInstanceOf(JsonResponse::class, $response);
     $expected = json_encode(['ids'=>[1,2,3]]);
     $this->assertJsonStringEqualsJsonString($expected, $response->getContent());
 
     $request = Request::create('/v1/test/123', 'GET');
     $response = $api->run($request);
+    $this->assertInstanceOf(JsonResponse::class, $response);
     $expected = json_encode(['id'=>'123']);
     $this->assertJsonStringEqualsJsonString($expected, $response->getContent());
 
     $data = ['test'=>'123'];
     $request = Request::create('/v1/test', 'POST', [], [], [], [], json_encode($data));
     $response = $api->run($request);
+    $this->assertInstanceOf(JsonResponse::class, $response);
     $expected = json_encode(['id'=>1000, 'data'=> $data]);
     $this->assertJsonStringEqualsJsonString($expected, $response->getContent());
 
     $data = ['test'=>'123'];
     $request = Request::create('/v1/test/123', 'PUT', [], [], [], [], json_encode($data));
     $response = $api->run($request);
+    $this->assertInstanceOf(JsonResponse::class, $response);
     $expected = json_encode(['id'=>'123', 'data'=> $data]);
     $this->assertJsonStringEqualsJsonString($expected, $response->getContent());
 
     $request = Request::create('/v1/test/123', 'DELETE');
     $response = $api->run($request);
+    $this->assertInstanceOf(JsonResponse::class, $response);
     $expected = json_encode(['id'=>'123']);
     $this->assertJsonStringEqualsJsonString($expected, $response->getContent());
 
     $data = ['test'=>'123'];
     $request = Request::create('/v1/test/123', 'PATCH', [], [], [], [], json_encode($data));
     $response = $api->run($request);
+    $this->assertInstanceOf(JsonResponse::class, $response);
     $expected = json_encode(['id'=>'123', 'data'=> $data]);
     $this->assertJsonStringEqualsJsonString($expected, $response->getContent());
   }
@@ -185,36 +191,42 @@ class BasicTest extends \PHPUnit_Framework_TestCase
     $api = new Server();
     $api->registerServiceLoader(new DirectoryServiceLoader(__DIR__ . '/services', '\\TestApi'));
 
-       $request = Request::create('/v1/test', 'GET');
+    $request = Request::create('/v1/test', 'GET');
     $response = $api->run($request);
+    $this->assertInstanceOf(JsonResponse::class, $response);
     $expected = json_encode(['ids'=>[1,2,3]]);
     $this->assertJsonStringEqualsJsonString($expected, $response->getContent());
 
     $request = Request::create('/v1/test/123', 'GET');
     $response = $api->run($request);
+    $this->assertInstanceOf(JsonResponse::class, $response);
     $expected = json_encode(['id'=>'123']);
     $this->assertJsonStringEqualsJsonString($expected, $response->getContent());
 
     $data = ['test'=>'123'];
     $request = Request::create('/v1/test', 'POST', [], [], [], [], json_encode($data));
     $response = $api->run($request);
+    $this->assertInstanceOf(JsonResponse::class, $response);
     $expected = json_encode(['id'=>1000, 'data'=> $data]);
     $this->assertJsonStringEqualsJsonString($expected, $response->getContent());
 
     $data = ['test'=>'123'];
     $request = Request::create('/v1/test/123', 'PUT', [], [], [], [], json_encode($data));
     $response = $api->run($request);
+    $this->assertInstanceOf(JsonResponse::class, $response);
     $expected = json_encode(['id'=>'123', 'data'=> $data]);
     $this->assertJsonStringEqualsJsonString($expected, $response->getContent());
 
     $request = Request::create('/v1/test/123', 'DELETE');
     $response = $api->run($request);
+    $this->assertInstanceOf(JsonResponse::class, $response);
     $expected = json_encode(['id'=>'123']);
     $this->assertJsonStringEqualsJsonString($expected, $response->getContent());
 
     $data = ['test'=>'123'];
     $request = Request::create('/v1/test/123', 'PATCH', [], [], [], [], json_encode($data));
     $response = $api->run($request);
+    $this->assertInstanceOf(JsonResponse::class, $response);
     $expected = json_encode(['id'=>'123', 'data'=> $data]);
     $this->assertJsonStringEqualsJsonString($expected, $response->getContent());
   }
