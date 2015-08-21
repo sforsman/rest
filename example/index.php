@@ -51,4 +51,5 @@ $api->registerErrorHandlers();
 $api->register('page', PageService::class);
 
 // Process the request
-$api->run();
+$response = $api->run();
+$response->send();
