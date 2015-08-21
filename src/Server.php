@@ -26,15 +26,18 @@ class Server
 
   public function __construct(EmitterInterface $emitter = null, ContainerInterface $container = null)
   {
-    if($emitter === null) {
-      $emitter = new Emitter();
-    }
     if($container === null) {
       $container = new Container();
+    }
+    if($emitter === null) {
+      $emitter = new Emitter();
+      // Since we are creating the default emitter, make sure the same instance is in the container
+      $container->add(EmitterInterface::class, $emitter);
     }
 
     $this->container   = $container;
     $this->router      = new Router($this->container);
+    // TODO: Don't force RestfulStrategy, move this to AbstractJsonService
     $this->router->setStrategy(new RestfulStrategy());
     $this->emitter     = $emitter;
     $this->services = [];
@@ -64,7 +67,13 @@ class Server
         try {
           $service = $this->container->get($class);
           if($service instanceof ServiceInterface) {
-            $this->emitter->emit(Event::named('invoke'), ['request'=>$request, 'args'=>$args, 'service'=>$service, 'method'=>$request_method]);
+            $eventArgs = [
+              'request'=>$request, 
+              'args'=>$args, 
+              'service'=>$service, 
+              'method'=>$request_method
+            ];
+            $this->emitter->emit(Event::named('invoke'), $eventArgs);
             return $service->invoke($request_method, $args, $request);
           } else {
             throw new Exception('The service "' . $class . '" does not implement ServerInterface');
@@ -75,7 +84,14 @@ class Server
           // HTTP code
 
           // By listening for these events, the API can implement logging, for an example
-          $this->emitter->emit(Event::named('exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args, 'service'=>$service, 'method'=>$request_method]);
+          $eventArgs = [
+            'exception'=>$e, 
+            'request'=>$request, 
+            'args'=>$args, 
+            'service'=>$service,
+            'method'=>$request_method
+          ];
+          $this->emitter->emit(Event::named('exception'), $eventArgs);
 
           switch($e->getCode())
           {
@@ -87,7 +103,14 @@ class Server
           }
         } catch(Exception $e) {
           // By listening for these events, the API can implement logging, for an example
-          $this->emitter->emit(Event::named('exception'), ['exception'=>$e, 'request'=>$request, 'args'=>$args, 'service'=>$service, 'method'=>$request_method]);
+          $eventArgs = [
+            'exception'=>$e, 
+            'request'=>$request, 
+            'args'=>$args, 
+            'service'=>$service, 
+            'method'=>$request_method
+          ];
+          $this->emitter->emit(Event::named('exception'), $eventArgs);
 
           // For other Exceptions we just show a server error
           throw new HttpException(500, 'Internal server error');
