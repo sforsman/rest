@@ -25,15 +25,15 @@ abstract class AbstractJsonService implements ServiceInterface
         $invokeArgs[] = $args['id'];
         break;
       case 'post':
-        $invokeArgs[] = $this->parseInput(file_get_contents('php://input'));
+        $invokeArgs[] = $this->parseInput($request->getContent());
         break;
       case 'put':
         $invokeArgs[] = $args['id'];
-        $invokeArgs[] = $this->parseInput(file_get_contents('php://input'));
+        $invokeArgs[] = $this->parseInput($request->getContent());
         break;
       case 'patch':
         $invokeArgs[] = $args['id'];
-        $invokeArgs[] = $this->parseInput(file_get_contents('php://input'));
+        $invokeArgs[] = $this->parseInput($request->getContent());
         break;
       case 'delete':
         $invokeArgs[] = $args['id'];
