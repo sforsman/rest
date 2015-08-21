@@ -105,15 +105,21 @@ class Server
     }
   }
 
-  public function run()
+  public function run(Request $request = null)
   {
-    $request    = $this->container->get(Request::class);
+    if($request === null) {
+      $request  = $this->container->get(Request::class);
+    } else {
+      // We need to replace the Request instance in the DIC
+      $this->container->add(Request::class, $request);
+    }
     $dispatcher = $this->router->getDispatcher();
     $method     = $request->getMethod();
     $path       = $request->getPathInfo();
 
     $response = $dispatcher->dispatch($method, $path);
-    $response->send();
+
+    return $response;
   }
 
   public function registerErrorHandlers()
@@ -148,5 +154,14 @@ class Server
       'message'=>'Internal server error',
     ]);
     exit();
+  }
+
+  public function registerServiceLoader(ServiceLoaderInterface $loader)
+  {
+    foreach($loader->getServices() as $version=>$classes) {
+      foreach($classes as $service=>$class) {
+        $this->register($service, $class, $version);
+      }
+    }
   }
 }
