@@ -39,7 +39,7 @@ class DirectoryServiceLoader implements ServiceLoaderInterface
         continue;
       } 
 
-      require $path;
+      require_once $path;
       
       $classNs = "{$this->ns}\\{$version}\\{$class}";
 
