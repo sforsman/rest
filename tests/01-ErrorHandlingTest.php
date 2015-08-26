@@ -2,7 +2,7 @@
 
 namespace sforsman\Rest;
 
-require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use League\Route\Http\Exception\NotFoundException;
 use Symfony\Component\HttpFoundation\Request;
