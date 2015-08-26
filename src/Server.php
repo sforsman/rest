@@ -62,16 +62,18 @@ class Server
     $path = '/' . $version . '/' . $entity;
 
     foreach(['GET','POST','PUT','PATCH','DELETE'] as $request_method) {
-      $closure = function(Request $request, array $args = []) use ($request_method, $class) {
+      $closure = function(Request $request, array $args = []) use ($request_method, $class, $entity, $version) {
         $service = new stdClass(); // This only exists to identify the situation where container throws an exception
         try {
           $service = $this->container->get($class);
           if($service instanceof ServiceInterface) {
             $eventArgs = [
-              'request'=>$request, 
-              'args'=>$args, 
-              'service'=>$service, 
-              'method'=>$request_method
+              'request' => $request, 
+              'args'    => $args, 
+              'service' => $service, 
+              'entity'  => $entity,
+              'version' => $version,
+              'method'  => $request_method,
             ];
             $this->emitter->emit(Event::named('invoke'), $eventArgs);
             return $service->invoke($request_method, $args, $request);
@@ -85,11 +87,13 @@ class Server
 
           // By listening for these events, the API can implement logging, for an example
           $eventArgs = [
-            'exception'=>$e, 
-            'request'=>$request, 
-            'args'=>$args, 
-            'service'=>$service,
-            'method'=>$request_method
+            'exception' => $e, 
+            'request'   => $request, 
+            'args'      => $args, 
+            'service'   => $service,
+            'entity'    => $entity,
+            'version'   => $version,
+            'method'    => $request_method,
           ];
           $this->emitter->emit(Event::named('exception'), $eventArgs);
 
@@ -104,11 +108,13 @@ class Server
         } catch(Exception $e) {
           // By listening for these events, the API can implement logging, for an example
           $eventArgs = [
-            'exception'=>$e, 
-            'request'=>$request, 
-            'args'=>$args, 
-            'service'=>$service, 
-            'method'=>$request_method
+            'exception' => $e, 
+            'request'   => $request, 
+            'args'      => $args, 
+            'service'   => $service, 
+            'entity'    => $entity,
+            'version'   => $version,
+            'method'    => $request_method,
           ];
           $this->emitter->emit(Event::named('exception'), $eventArgs);
 
