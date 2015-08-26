@@ -148,6 +148,11 @@ class Server
 
     $response = $dispatcher->dispatch($method, $path);
 
+    $eventArgs = [
+      'response' => $response, 
+    ];
+    $this->emitter->emit(Event::named('response_ready'), $eventArgs);
+
     return $response;
   }
 
