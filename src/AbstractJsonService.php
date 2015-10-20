@@ -39,6 +39,14 @@ abstract class AbstractJsonService implements ServiceInterface
         $invokeArgs[] = $args['id'];
         break;
     }
+    if(isset($args['subentity'])) {
+      $invokeArgs[] = $args['subentity'];
+      $refmethod = new \ReflectionMethod($this, $method);
+      if($refmethod->getNumberOfParameters() !== count($invokeArgs)) {
+        throw new RestException('Not implemented', 405);  
+      }
+    }
+        
     $response = call_user_func_array([$this, $method], $invokeArgs);
     if(!is_array($response)) {
       throw new Exception('Invalid response data');

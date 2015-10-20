@@ -124,12 +124,15 @@ class Server
       };
 
       if($request_method === 'POST') {
+        $this->router->addRoute($request_method, $path . '/{subentity}', $closure);
         $this->router->addRoute($request_method, $path, $closure);
       } elseif($request_method === 'GET') {
         $this->router->addRoute($request_method, $path . '/{id}', $closure);
+        $this->router->addRoute($request_method, $path . '/{subentity}/{id}', $closure);
         $this->router->addRoute($request_method, $path, $closure);
       } else {
         $this->router->addRoute($request_method, $path . '/{id}', $closure);
+        $this->router->addRoute($request_method, $path . '/{subentity}/{id}', $closure);
       }
     }
   }
