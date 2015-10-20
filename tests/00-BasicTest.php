@@ -69,11 +69,6 @@ class BasicTest extends \PHPUnit_Framework_TestCase
     $api = new Server();
     $api->register('test', InterfaceService::class, 'v1');
 
-    $request = Request::create('/v1/test/123', 'POST');
-    $response = $api->run($request);
-    $this->assertInstanceOf(JsonResponse::class, $response);
-    $this->assertJsonStringEqualsJsonString('{"status_code":405,"message":"Method Not Allowed"}', $response->getContent());
-
     $request = Request::create('/v1/test', 'PUT');
     $response = $api->run($request);
     $this->assertInstanceOf(JsonResponse::class, $response);
