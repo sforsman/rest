@@ -35,4 +35,9 @@ class TestService extends AbstractJsonService
   {
     return ['id'=>$id, 'data'=>$data];
   }
+
+  public function options()
+  {
+    return [];
+  }
 }
