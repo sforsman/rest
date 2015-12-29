@@ -61,7 +61,9 @@ class Server
     
     $path = '/' . $version . '/' . $entity;
 
-    foreach(['GET','POST','PUT','PATCH','DELETE'] as $request_method) {
+    $methods = ['GET','POST','PUT','PATCH','DELETE','OPTIONS'];
+
+    foreach($methods as $request_method) {
       $closure = function(Request $request, array $args = []) use ($request_method, $class, $entity, $version) {
         $service = new stdClass(); // This only exists to identify the situation where container throws an exception
         try {
@@ -119,6 +121,7 @@ class Server
           $this->emitter->emit(Event::named('exception'), $eventArgs);
 
           // For other Exceptions we just show a server error
+file_put_contents('/tmp/excep.txt', $e->getMessage());
           throw new HttpException(500, 'Internal server error');
         }
       };
@@ -126,7 +129,7 @@ class Server
       if($request_method === 'POST') {
         $this->router->addRoute($request_method, $path . '/{subentity}', $closure);
         $this->router->addRoute($request_method, $path, $closure);
-      } elseif($request_method === 'GET') {
+      } elseif($request_method === 'GET' or $request_method === 'OPTIONS') {
         $this->router->addRoute($request_method, $path . '/{id}', $closure);
         $this->router->addRoute($request_method, $path . '/{subentity}/{id}', $closure);
         $this->router->addRoute($request_method, $path, $closure);
