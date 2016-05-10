@@ -121,7 +121,6 @@ class Server
           $this->emitter->emit(Event::named('exception'), $eventArgs);
 
           // For other Exceptions we just show a server error
-file_put_contents('/tmp/excep.txt', $e->getMessage());
           throw new HttpException(500, 'Internal server error');
         }
       };
