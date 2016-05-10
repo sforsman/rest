@@ -4,12 +4,17 @@ namespace TestApi\v1;
 
 use \Exception;
 use sforsman\Rest\AbstractJsonService;
+use sforsman\Rest\RestException;
 
 class ErrorService extends AbstractJsonService
 {
   public function get($id)
   {
-    throw new Exception('Failed getting ' . $id);
+    if(!preg_match("|^[0-9]+$|", $id)) {
+      throw new RestException('Bad id');
+    } else {
+      throw new Exception('Failed getting ' . $id);
+    }
   }
 
   public function all()
