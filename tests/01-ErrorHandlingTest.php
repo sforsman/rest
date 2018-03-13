@@ -15,7 +15,7 @@ class ErrorTest extends \PHPUnit_Framework_TestCase
     $api = new Server();
     $api->registerServiceLoader(new DirectoryServiceLoader(__DIR__ . '/services', '\\TestApi'));
 
-    $request = Request::create('/v1/error/123', 'GET');
+    $request = Request::create('/v1/error/1', 'GET');
     $response = $api->run($request);
     $this->assertEquals($response->getStatusCode(), 500);
     $this->assertInstanceOf(JsonResponse::class, $response);
@@ -32,5 +32,17 @@ class ErrorTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals($response->getStatusCode(), 400);
     $this->assertInstanceOf(JsonResponse::class, $response);
     $this->assertJsonStringEqualsJsonString('{"status_code":400,"message":"Bad id"}', $response->getContent());
+  }
+
+  public function testRestExceptionNotFound()
+  {
+    $api = new Server();
+    $api->registerServiceLoader(new DirectoryServiceLoader(__DIR__ . '/services', '\\TestApi'));
+
+    $request = Request::create('/v1/error/4', 'GET');
+    $response = $api->run($request);
+    $this->assertEquals($response->getStatusCode(), 404);
+    $this->assertInstanceOf(JsonResponse::class, $response);
+    $this->assertJsonStringEqualsJsonString('{"status_code":404,"message":"Not found"}', $response->getContent());
   }
 }

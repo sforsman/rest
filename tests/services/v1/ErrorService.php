@@ -12,6 +12,8 @@ class ErrorService extends AbstractJsonService
   {
     if(!preg_match("|^[0-9]+$|", $id)) {
       throw new RestException('Bad id');
+    } elseif($id >= 4) {
+      throw new RestException('Not found', 404);
     } else {
       throw new Exception('Failed getting ' . $id);
     }
