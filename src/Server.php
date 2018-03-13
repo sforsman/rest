@@ -23,6 +23,7 @@ class Server
   protected $router;
   protected $emitter;
   protected $services;
+  protected $previousErrorHandler;
 
   public function __construct(EmitterInterface $emitter = null, ContainerInterface $container = null)
   {
@@ -163,16 +164,17 @@ class Server
 
   public function registerErrorHandlers()
   {
-    set_error_handler(function ($errno, $errstr, $errfile, $errline) {
-      $this->respondError("PHP error {$errno}: {$errstr} @ {$errfile}:{$errline}");
+    $this->previousErrorHandler = set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+      $this->respondError("PHP error {$errno}: {$errstr} @ {$errfile}:{$errline}", func_get_args());
      }, E_ALL);
 
     // Ensure fatal errors get logged and a clean error is shown to the user
     register_shutdown_function(function() {
       $error = error_get_last();
       if($error !== null) {
-        list($errno,$errstr,$errfile,$errline) = array_values($error);
-        $this->respondError("Fatal error {$errno}: {$errstr} @ {$errfile}:{$errline}");
+        $errorArgs = array_values($error);
+        list($errno,$errstr,$errfile,$errline) = $errorArgs;
+        $this->respondError("Fatal error {$errno}: {$errstr} @ {$errfile}:{$errline}", $errorArgs);
       }
     });
 
@@ -182,9 +184,9 @@ class Server
     error_reporting(0);
   }
 
-  protected function respondError($errorStr)
+  protected function respondError($errorStr, $errorArgs)
   {
-    $this->emitter->emit(Event::named('error'), $errorStr);
+    $this->emitter->emit(Event::named('error'), $errorStr, $errorArgs);
 
     http_response_code(500);
     Header('Content-type: application/json');
@@ -202,5 +204,10 @@ class Server
         $this->register($service, $class, $version);
       }
     }
+  }
+  
+  public function getPreviousErrorHandler()
+  {
+    return $this->previousErrorHandler;
   }
 }
